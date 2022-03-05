@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Veronica | MockAPI</title>
+    <!-------------------------------------------BOOTSTRAP------------------------------------------------- - -->
+    <!-- Latest compiled and minified CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Latest compiled JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-------------------------------------------VUE------------------------------------------------- - -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-------------------------------------------CSS------------------------------------------------- - -->
+    <link rel="stylesheet" href="style1.css" />
+  </head>
+  <body>
+    <!-------------------------------------------NAVBAR------------------------------------------------- - -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+      <div class="container-fluid">
+        <h5 class="navbar-brand" href="#">Veronica CRUD</h5>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+          <div class="navbar-nav ms-auto right">
+            <a class="nav-link" href="index.html">Home</a>
+            <a class="nav-link" href="VerotblPelanggan.html">Pelanggan</a>
+            <a class="nav-link" href="VerotblPaketSalon.html">Paket Salon</a>
+            <a class="nav-link" href="VerotblPemesanan.html">Pemesanan</a>
+            <a class="nav-link" href="#">Pembayaran baru</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <!-------------------------------------------FORM------------------------------------------------- - -->
+    <div id="app">
+      <div class="container-fluid crud">
+        <div class="row">
+          <div class="col form">
+            <div class="card">
+              <div class="container title"><h5>Data Pembayaran</h5></div>
+              <div class="container body">
+                <form class="needs-validation" novalidate>
+                  <label for="id">Nama</label> <br />
+                  <input v-model="id_pemesanan" type="text" id="id" class="form-control" placeholder="Masukan nama pelanggan" value="" required /> <br />
+                  <label for="tgl">Alamat</label> <br />
+                  <input v-model="tanggal" type="text" id="tgl" class="form-control" placeholder="Masukan alamat pelanggan" value="" required /> <br />
+                  <label for="total">No. Handphone</label> <br />
+                  <input v-model="total" type="tel" id="total" class="form-control" placeholder="Masukan No. Handphone pelanggan" value="" required /> <br />
+                  <label for="metod">Pilih Metode Pembayaran</label>
+                  <div class="form-check">
+                    <input v-model="metode" type="radio" class="form-check-input" id="metod" name="mtd" /> Via bank
+                    <label class="form-check-label" for="met"></label>
+                  </div>
+                  <div class="form-check">
+                    <input v-model="metode" type="radio" class="form-check-input" id="method" name="mtd" />Cash
+                    <label class="form-check-label" for="met"></label>
+                  </div>
+                </form>
+                <!-- untuk button jangan masukin di form agar method didalam button bisa berjalan baik -->
+                <button v-if="!edit" v-on:click="buatPembayaran" type="submit" class="btn btn-primary mt-4">Tambah</button>
+                <button v-if="edit" v-on:click="konfirmasiEdit" type="submit" class="btn btn-primary mt-4">Edit</button>
+                <!-- <button v-if="hapus" v-on:click="konfirmasiHapus" type="submit" class="btn btn-primary ms-2">Hapus</button> -->
+                <button v-on:click="reset()" class="btn btn-warning mt-4">Reset</button>
+                <div v-if="message" class="alert alert-danger mt-4" role="alert">{{ message }}</div>
+              </div>
+            </div>
+          </div>
+          <!-------------------------------------------TABEL------------------------------------------------- - -->
+          <div class="col tabel">
+            <table class="table table-secondary">
+              <tr>
+                <th>ID</th>
+                <th>id_pemesanan</th>
+                <th>tanggal</th>
+                <th>total</th>
+                <th>Metode</th>
+                <th>Edit</th>
+                <th>Hapus</th>
+              </tr>
+              <tr v-for="bayar in pembayaran">
+                <td>{{ bayar.id_bayar }}</td>
+                <td>{{ bayar.id_pemesanan}}</td>
+                <td>{{ bayar.tanggal }}</td>
+                <td>{{ bayar.total }}</td>
+                <td>{{ bayar.metode }}</td>
+                <td><button class="btn btn-warning" v-on:click="editBaris(bayar)">Edit</button></td>
+                <td><button class="btn btn-danger" v-on:click="konfirmasiHapus(bayar)">Hapus</button></td>
+              </tr>
+            </table>
+          </div>
+          <!--MEMBUAT TOMBOL BACK TO TOP - * samakan warna dengan footer * tempatkan di bagian bawah row (salah satu container col) -->
+          <div class="back"><a href="#">Kembali ke awal</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script>
+      var app = new Vue({
+        el: "#app",
+        data: {
+          pembayaran: [],
+          id_pemesanan: "",
+          tanggal: "",
+          total: "",
+          metode: "",
+          edit: false,
+          idEdit: null,
+          idHapus: null,
+          errors: [],
+          message: null,
+        },
+        mounted: function () {
+          this.lihatPembayaran();
+        },
+        methods: {
+          lihatPembayaran() {
+            axios
+              .get("https://6215ea3f7428a1d2a354291a.mockapi.io/pembayaran")
+              .then((response) => {
+                this.pembayaran = response.data;
+                console.log(response);
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          },
+          buatPembayaran() {
+            axios
+              .post("https://6215ea3f7428a1d2a354291a.mockapi.io/pembayaran", {
+                id_pemesanan: this.id_pemesanan,
+                tanggal: this.tanggal,
+                total: this.total,
+                metode: this.metode,
+              })
+              .then((response) => {
+                this.lihatPembayaran();
+                this.message = "Data telah dimasukan";
+                console.log(response);
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          },
+          editBaris: function (bayar) {
+            this.id_pemesanan = bayar.id_pemesanan;
+            this.tanggal = bayar.tanggal;
+            this.total = bayar.total;
+            this.metode = bayar.metode;
+            this.edit = true;
+            this.hapus = false;
+            this.idEdit = bayar.id_bayar;
+            this.pesan = null;
+          },
+          reset: function () {
+            this.id_pemesanan = null;
+            this.tanggal = null;
+            this.total = null;
+            this.metode = null;
+            this.idEdit = null;
+            this.edit = false;
+            this.hapus = false;
+            this.pesan = null;
+            this.error = null;
+          },
+          konfirmasiEdit: function () {
+            axios
+              .put(`https://6215ea3f7428a1d2a354291a.mockapi.io/pembayaran/${this.idEdit}`, {
+                id_pemesanan: this.id_pemesanan,
+                tanggal: this.tanggal,
+                total: this.total,
+                metode: this.metode,
+              })
+              .then((res) => {
+                this.message = "Data telah diedit";
+                this.lihatPembayaran();
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          },
+          konfirmasiHapus: function (bayar) {
+            if (confirm("Are you sure?")) {
+              axios
+                .delete(`https://6215ea3f7428a1d2a354291a.mockapi.io/pembayaran/${bayar.id_bayar}`)
+                .then((res) => {
+                  this.message = " Data telah dihapus";
+                  this.lihatPembayaran();
+                })
+                .catch((err) => {
+                  console.log(err);
+                });
+            } else {
+              alert("santai");
+            }
+          },
+        },
+      });
+    </script>
+
+    <!-- footer------------------------------------------------------------------------------------- -->
+    <div class="container-fluid footer">
+      <p style="color: white; text-align: center">© 2022 Veronica Saloon</p>
+      <p></p>
+    </div>
+  </body>
+</html>
